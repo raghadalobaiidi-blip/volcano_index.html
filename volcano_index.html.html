@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>البركان</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#0b0706;--surface:#1a110e;--text:#f3e3d6;--muted:#b59a8b;--accent:#ff6a2b;--accent2:#ffb347;--line:#3a221a;--storytext:#ffe8d6;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% 0%,#2a0f08 0,var(--bg) 60%) fixed;color:var(--text);font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;line-height:1.8;min-height:100vh}
+button{font:inherit;cursor:pointer}
+.screen{display:none;max-width:860px;margin:0 auto;padding:20px 16px 96px}
+.screen.on{display:block}
+#story{max-width:none;background:#1a0f0b;color:var(--storytext);min-height:100vh;padding:0}
+#story.on{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#story #film{width:min(100%,calc(62vh*16/9));height:auto;aspect-ratio:16/9;display:block;background:#1a0f0b}
+#cap{min-height:4em;padding:10px 18px;font-size:1.25rem;text-align:center;transition:opacity .4s;max-width:760px}
+#ctl{display:flex;gap:10px;padding-bottom:24px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:999px;padding:10px 26px;font-weight:700}
+.btn.ghost{background:transparent;border:1px solid currentColor;color:inherit}
+.btn:disabled{opacity:.35}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line)}
+header.top .bar{flex:1;height:6px;background:var(--line);border-radius:9px;overflow:hidden}
+header.top .bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s}
+h2{color:var(--accent);font-size:1.6rem;margin:.2em 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+ul{padding-inline-start:1.2em;margin:.3em 0}
+.flip{perspective:800px;height:230px;cursor:pointer}
+.flip>div{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.flip.on>div{transform:rotateY(180deg)}
+.flip .f,.flip .b{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:center;text-align:center;overflow:auto}
+.flip .f{background:var(--surface);border:1px solid var(--line)}
+.flip .f span{display:none}.flip .f{background:linear-gradient(160deg,var(--surface),#0f0807);box-shadow:inset 0 2px 0 var(--accent),0 0 24px #ff6a2b22}.flip .f b{font-size:1.25rem}@keyframes pulse{50%{filter:brightness(1.4)}}.mg{animation:pulse 2.2s infinite}
+.flip .b{background:linear-gradient(160deg,#7a2a0e,#2a0f08);border:1px solid var(--accent);color:#ffe8d6;transform:rotateY(180deg);font-size:.95rem;box-shadow:0 0 28px #ff6a2b44}
+.hint{color:var(--muted);font-size:.9rem}
+.vol svg{width:100%;height:auto;max-height:340px}
+.part{cursor:pointer;transition:filter .2s}.part:hover,.part.sel{filter:brightness(1.3)}
+.lbl{font-size:13px;fill:#fff;stroke:#000a;stroke-width:3;paint-order:stroke;pointer-events:none;font-weight:700}
+#partInfo{min-height:4em}
+canvas.sim{width:100%;height:240px;border-radius:14px;background:#1a0f0b;display:block}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.flow{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap}
+.step{flex:1;min-width:130px;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center;color:var(--text)}
+.step.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.arr{align-self:center;color:var(--accent);font-size:1.6rem}
+.bars{display:flex;align-items:flex-end;gap:14px;height:150px;border-bottom:2px solid var(--line);padding:0 10px}
+.bars div{flex:1;background:linear-gradient(var(--accent2),var(--accent));border-radius:8px 8px 0 0;min-height:2px;text-align:center;color:#fff;font-size:.85rem;transition:height .3s}
+.inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.inputs input{width:100%;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+.foot{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;z-index:5}
+.vt canvas{width:100%;height:auto;border-radius:12px;display:block;background:#1a0f0b;margin:6px 0;cursor:pointer}.vt b{font-size:1.2rem}
+.goals{padding:0!important}.g{cursor:pointer;padding:8px 10px;border-radius:10px;list-style:none;transition:.2s}.g::before{content:"○ ";color:var(--accent)}.g.d{background:#ff6a2b22;text-decoration:line-through;opacity:.85}.g.d::before{content:"✓ "}.hz{cursor:pointer;margin:0 4px}
+.slot{fill:rgba(255,255,255,.05);stroke:#ffb347;stroke-width:2;stroke-dasharray:6 5;cursor:pointer}.slot.ok{stroke:none;cursor:default}.pc.on{background:var(--accent);color:#fff}.pc:disabled{opacity:.3}
+body.pr{overflow:hidden;height:100vh}
+#app .screen{max-width:none;padding:10px 24px;transform-origin:top right}
+#app h2{font-size:1.45rem;margin:.1em 0}
+#app .flip{height:170px}
+#app canvas.sim{height:200px}
+#app .card{padding:12px;margin:8px 0}
+#app canvas:not(.sim){width:auto;height:auto;max-width:100%;max-height:360px;margin:6px auto;display:block}
+#app canvas.sim{width:100%!important;height:220px!important;object-fit:contain}
+</style>
+</head>
+<body>
+
+<section id="story" class="screen on">
+  <canvas id="film" width="960" height="540"></canvas>
+  <div id="cap"></div><div class="hint" id="vn" style="min-height:1.5em;text-align:center"></div>
+  <div id="ctl"><button class="btn" id="play">▶ شغّلي المقدمة</button><button class="btn ghost" id="skip">تخطي</button><button class="btn ghost" id="snd"></button></div>
+</section>
+
+<div id="app" style="display:none">
+  <header class="top"><strong>🌋 البركان</strong><div class="bar"><b id="prog"></b></div><span id="pn" class="hint"></span><button class="btn ghost" id="vt2" style="padding:4px 12px"></button></header>
+
+  <section class="screen" data-s>
+    <h2>أهداف المشروع</h2>
+    <p class="hint">اضغطي على كل هدف عندما تتأكدين من فهمه: <b id="gc">0/6</b></p><div class="card"><ul class="goals">
+      <li class="g">التعرف إلى مفهوم البركان وأجزائه.</li>
+      <li class="g">فهم كيف يتكوّن البركان ولماذا يثور.</li>
+      <li class="g">التمييز بين الماغما والحمم.</li>
+      <li class="g">التمييز بين أنواع البراكين وأنواع الثوران.</li>
+      <li class="g">معرفة دور STEM في رصد البراكين وحماية الناس.</li>
+      <li class="g">مشاهدة محاكاة تحاكي شكل الثوران وتفسيرها علمياً.</li>
+    </ul></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>ما هو البركان؟</h2>
+    <div class="card">البركان فتحة في القشرة الأرضية يخرج منها الصخر المنصهر والغازات والرماد.</div>
+    <p class="hint">اضغطي على البطاقة لتقلبيها:</p>
+    <div class="grid">
+      <div class="flip"><div><div class="f"><span>🔥</span><b>الماغما</b></div><div class="b">الصخر المنصهر وهو لا يزال تحت الأرض.</div></div></div>
+      <div class="flip"><div><div class="f"><span>🌋</span><b>الحمم (اللافا)</b></div><div class="b">الصخر المنصهر بعد خروجه إلى سطح الأرض.</div></div></div>
+    </div>
+  <div class="card"><b>🎚️ رحلة الصخر المنصهر</b><canvas class="sim" id="mc" width="400" height="260" style="height:auto"></canvas><input type="range" id="mcs" min="0" max="100" value="0" style="width:100%"><div id="mct" style="font-weight:700;min-height:2em"></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>كيف يتكوّن البركان؟</h2>
+    <p class="hint">اضغطي على كل بطاقة:</p>
+    <div class="grid">
+      <div class="flip"><div><div class="f"><span>🧩</span><b>الصفائح</b></div><div class="b">تتكوّن القشرة الأرضية من قطع ضخمة تسمى الصفائح، وهي تتحرك ببطء شديد.</div></div></div>
+      <div class="flip"><div><div class="f"><span>↔️</span><b>التقاء الصفائح أو ابتعادها</b></div><div class="b">تتكوّن معظم البراكين عند أماكن التقاء الصفائح أو ابتعادها عن بعضها، حيث تتكوّن الماغما وتصعد نحو السطح بسبب الحرارة والضغط.</div></div></div>
+      <div class="flip"><div><div class="f"><span>📍</span><b>النقاط الساخنة</b></div><div class="b">قد تتكوّن بعض البراكين بعيداً عن حدود الصفائح فوق نقاط ساخنة في باطن الأرض.</div></div></div>
+    </div>
+  <div class="card"><b>🎚️ حرّكي الصفائح</b><canvas class="sim" id="pl" width="400" height="260" style="height:auto"></canvas><input type="range" id="pls" min="0" max="100" value="0" style="width:100%"><div id="plt" style="font-weight:700;min-height:3em"></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>أجزاء البركان</h2>
+    <p class="hint">اسحبي المجسم لتدويره، وجرّبي «مقطع» و«ثوران»:</p>
+    <div class="card vol">
+      <canvas id="m3" width="800" height="520" style="width:100%;height:auto;border-radius:14px;background:#1a0f0b;touch-action:none;cursor:grab;display:block"></canvas>
+      <div class="row"><button class="btn ghost" id="mCut">✂️ مقطع</button><button class="btn ghost" id="mEr">🌋 ثوران</button><button class="btn" id="mRot">⟳ دوران تلقائي</button></div>
+      <div class="row" id="mTags"></div>
+      <div id="partInfo" class="card" style="margin:8px 0 0">اضغطي على أي جزء من المجسم، أو اختاريه من الأزرار.</div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>أنواع البراكين</h2>
+    <p class="hint">جرّبي التفاعل مع كل نوع:</p>
+    <div class="grid">
+      <div class="card vt"><b>🌋 نشط</b><canvas id="va" width="400" height="260"></canvas><div class="hint">يثور حالياً أو ثار حديثاً، ويحتاج إلى مراقبة مستمرة.</div><div id="ta" style="min-height:3em;font-weight:700">اضغطي الزر لتشاهدي ثوراناً.</div><div class="row"><button class="btn" id="ba">أطلقي الثوران</button></div></div>
+      <div class="card vt"><b>😴 خامد</b><canvas id="vb" width="400" height="260"></canvas><div class="hint">توقف عن الثوران منذ فترة، لكنه قد ينشط مرة أخرى.</div><div id="tb" style="min-height:3em;font-weight:700"></div><div class="row"><button class="btn" id="bb">حرّكي باطن الأرض</button></div></div>
+      <div class="card vt"><b>⛰️ منقرض</b><canvas id="vc" width="400" height="260"></canvas><div class="hint">لا يُتوقع أن يثور مرة أخرى.</div><div id="tc" style="min-height:3em;font-weight:700"></div><label>⏳ مرور الزمن<input type="range" id="vcs" min="0" max="100" value="0" style="width:100%"></label></div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>أنواع الثوران</h2>
+    <p class="hint">اضغطي على نوع الثوران لتشاهديه:</p>
+    <div class="grid">
+      <div class="card" id="eq" style="cursor:pointer"><b>الثوران الهادئ</b><br>تسيل الحمم ببطء على جوانب البركان، وغالباً يكون أقل خطراً على الناس.</div>
+      <div class="card" id="ex" style="cursor:pointer"><b>الثوران الانفجاري</b><br>تنطلق الغازات والرماد والصخور بقوة كبيرة، وقد تصل إلى ارتفاعات عالية في الجو.</div>
+    </div>
+    <canvas class="sim" id="cv" width="800" height="480"></canvas>
+    <div class="card"><label>لزوجة الماغما: <b id="vl"></b><input type="range" id="vs" min="0" max="100" value="50" style="width:100%"></label><div class="hint" id="vh"></div><div class="row"><button class="btn" id="e1">أطلقي الثوران</button></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>العلوم والتكنولوجيا (S + T)</h2>
+    <canvas class="sim" id="stc" width="800" height="360" style="height:auto;margin:8px 0"></canvas>
+    <div class="grid">
+      <div class="flip"><div><div class="f"><span>🔬</span><b>العلوم</b></div><div class="b">يدرس العلماء الاهتزازات الأرضية وارتفاع الغازات وتغيّر حرارة الأرض، فهي علامات قد تدل على قرب الثوران.</div></div></div>
+      <div class="flip"><div><div class="f"><span>🛰️</span><b>التكنولوجيا</b></div><div class="b">تُستخدم أجهزة قياس الزلازل والأقمار الصناعية والكاميرات الحرارية والطائرات المسيّرة لمراقبة البركان، وتُرسل البيانات إلى مراكز الرصد.</div></div></div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>الرياضيات والهندسة (M + E)</h2>
+    <canvas class="sim" id="mec" width="800" height="360" style="height:auto;margin:8px 0"></canvas>
+    <div class="grid">
+      <div class="flip"><div><div class="f"><span>📐</span><b>الرياضيات</b></div><div class="b">تقدير احتمال حدوث الثوران، وتقدير سرعة الحمم والمسافة التي ستصل إليها، وقياس ارتفاع المخروط، وتمثيل البيانات برسوم بيانية.</div></div></div>
+      <div class="flip"><div><div class="f"><span>🏗️</span><b>الهندسة</b></div><div class="b">وضع خطط الإخلاء ومسارات الطوارئ، وبناء حواجز لتحويل مسار الحمم، وتصميم مبانٍ وأسقف تتحمل ثقل الرماد.</div></div></div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>غرفة الرصد: STEM فريق واحد</h2>
+    <p>تخيّلي أن مركز رصد سجّل إشارات خطر. اضغطي على كل خطوة:</p>
+    <div class="flow" id="flow">
+      <button class="step" data-t="اهتزازات وارتفاع في الغازات (علوم).">⚠️<br><b>إشارات خطر</b></button><span class="arr">←</span>
+      <button class="step" data-t="أقمار صناعية وأجهزة قياس (تكنولوجيا).">📡<br><b>رصد ونقل البيانات</b></button><span class="arr">←</span>
+      <button class="step" data-t="تقدير احتمال الثوران وسرعة الحمم (رياضيات).">🧮<br><b>تحليل وحساب</b></button><span class="arr">←</span>
+      <button class="step" data-t="تنفيذ خطط حماية الناس (هندسة).">🚨<br><b>إنذار وإخلاء</b></button>
+    </div>
+    <div class="card" id="stepInfo">اضغطي على إحدى الخطوات.</div>
+    <div class="card"><b>جهاز رصد الزلازل</b> (جرّبي رفع النشاط)<canvas class="sim" id="sz" width="800" height="200" style="height:150px"></canvas><label>نشاط الاهتزازات تحت البركان<input type="range" id="sl" min="0" max="100" value="8" style="width:100%"></label><div id="st" style="font-weight:700"></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>من الخطر إلى الفائدة</h2>
+    <div class="card">تقع أيسلندا فوق منطقة بركانية نشطة، ومع ذلك تستفيد من حرارة باطن الأرض في توليد الكهرباء وتدفئة المنازل، وهذا مثال على تحويل الهندسة مصدر الخطر إلى طاقة نظيفة.</div>
+    <p class="hint">اضغطي على البيوت لتضيئيها بطاقة باطن الأرض:</p>
+    <div class="card" style="font-size:2.4rem;text-align:center"><span class="hz">🏠</span><span class="hz">🏠</span><span class="hz">🏠</span><span class="hz">🏠</span><span class="hz">🏠</span><div class="hint" id="hst" style="min-height:1.8em"></div></div>
+    <div class="card">كما أن الرماد البركاني يجعل التربة خصبة.</div>
+    <p class="hint">اضغطي على التربة لتنمو فيها نبتة:</p>
+    <div class="card" id="pl2" style="text-align:center;cursor:pointer"><div id="pe" style="font-size:3rem">🌰</div><div id="pt">تربة بركانية</div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>الانتقال إلى محاكاة التجربة</h2>
+    <div class="card" style="font-size:1.1rem">بعد أن تعرّفنا إلى البركان وأجزائه وأسباب ثورانه ودور STEM في رصده وحماية الإنسان، ننتقل الآن إلى الجانب العملي. والآن مع محاكاة التجربة، سنشاهد محاكاة لشكل الثوران، لنرى كيف يمكن لتفاعل كيميائي بسيط أن يقرّب لنا الفكرة.</div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>محاكاة التجربة 🧪</h2>
+    <div class="card"><b>🧪 جرّبي الآن (محاكاة)</b><canvas class="sim" id="fx" width="400" height="260" style="height:auto"></canvas><div class="row"><button class="btn fb" data-k="b">🧂 بيكربونات الصوديوم</button><button class="btn fb" data-k="v">🧴 الخل</button><button class="btn fb" data-k="c">🎨 ملوّن الطعام</button><button class="btn ghost" id="fr">🔄 إعادة</button></div><div class="hint" id="ft" style="min-height:3.6em;margin-top:8px"></div></div>
+    <div class="flip" style="height:210px"><div><div class="f"><span>💡</span><b>التفسير العلمي (اضغطي)</b></div><div class="b">يتفاعل الخل مع بيكربونات الصوديوم وينتج غاز ثاني أكسيد الكربون، فتندفع الرغوة إلى الأعلى. وملوّن الطعام يجعل الرغوة تشبه الحمم. وهذه المحاكاة تحاكي شكل الثوران، أما في البركان الحقيقي فتدفع الغازات المذابة في الماغما الصخور المنصهرة نحو السطح.</div></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>حان وقت الاختبار! 🎮</h2>
+    <div class="card" style="text-align:center"><div class="mg" style="font-size:4rem">🌋</div><div style="font-size:1.2rem">بعد أن تعرّفنا إلى البركان وأجزائه وأنواعه ودور العلوم والتكنولوجيا والهندسة والرياضيات، حان وقت اختبار ما تعلمناه. ثلاث ألعاب تفاعلية بانتظارك:</div></div>
+    <div class="grid">
+      <div class="card" style="text-align:center"><div style="font-size:2rem">🏘️</div><b>أنقذي القرية</b></div>
+      <div class="card" style="text-align:center"><div style="font-size:2rem">🧩</div><b>ركّبي البركان</b></div>
+      <div class="card" style="text-align:center"><div style="font-size:2rem">📡</div><b>اصطادي الإشارات</b></div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>أنقذي القرية 🏘️</h2>
+    <p class="hint">اختاري الإجراء الصحيح في كل مرحلة بالترتيب: علوم ← تكنولوجيا ← رياضيات ← هندسة. كل خطأ يقرّب الحمم من البيوت!</p>
+    <canvas class="sim" id="rgc" width="800" height="360" style="height:auto"></canvas>
+    <div class="card" id="rg"></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>ركّبي البركان 🧩</h2>
+    <p class="hint">اختاري قطعة ثم اضغطي على مكانها الصحيح في الرسم:</p>
+    <div class="card vol">
+      <svg viewBox="0 0 400 260" role="img" aria-label="تركيب البركان">
+        <rect x="0" y="200" width="400" height="60" fill="url(#gr)"/>
+        <path class="slot" data-k="cone" d="M60 200 L170 60 L230 60 L340 200Z"/>
+        <ellipse class="slot" data-k="chamber" cx="200" cy="232" rx="80" ry="22"/>
+        <rect class="slot" data-k="conduit" x="190" y="70" width="20" height="150" rx="8"/>
+        <path class="slot" data-k="crater" d="M165 62 L200 82 L235 62Z"/>
+      </svg>
+      <div class="row" style="justify-content:center"><button class="btn ghost pc" data-k="crater">الفوهة</button><button class="btn ghost pc" data-k="cone">المخروط البركاني</button><button class="btn ghost pc" data-k="chamber">غرفة الماغما</button><button class="btn ghost pc" data-k="conduit">القناة البركانية</button><button class="btn ghost" id="ar">🔄 إعادة</button></div>
+      <div id="at" class="card" style="margin:8px 0 0;min-height:4em">اختاري قطعة لتبدئي.</div>
+    </div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>اصطادي الإشارات 📡</h2>
+    <p class="hint">إشارات الخطر (اهتزاز 〰️، غاز 💨، حرارة 🌡️) تظهر وتختفي بسرعة. اضغطي عليها قبل أن تختفي لتجمعي النقاط! المدة 30 ثانية.</p>
+    <canvas class="sim" id="sgc" width="800" height="360" style="height:auto;touch-action:manipulation"></canvas>
+    <div class="card"><div id="sgt" style="min-height:2.4em;font-weight:700"></div><div class="row"><button class="btn" id="sgb">ابدئي اللعبة</button></div></div>
+  </section>
+
+  <section class="screen" data-s>
+    <h2>الخاتمة والشكر</h2>
+    <div class="card">في الختام، تبيّن أن البركان ظاهرة طبيعية تجمع بين الخطر والفائدة. وقد أوضح المشروع أن العلوم تفسّر أسبابه، والتكنولوجيا ترصده، والرياضيات تقيس نتائجه، والهندسة تحمي الإنسان منه وتستثمر طاقته.</div>
+    <div class="card">وتبقى أمامنا أسئلة: هل نستطيع يوماً التنبؤ بكل ثوران بدقة كاملة؟ وقد تكون الإجابة على يد جيلنا.</div><div class="row" style="justify-content:center"><button class="btn ghost pr">نعم</button><button class="btn ghost pr">ربما</button><button class="btn ghost pr">لا</button></div><div id="prt" style="text-align:center;min-height:3em;margin-top:8px"></div>
+    <h2 style="text-align:center">نشكركم على حسن استماعكم 🌋</h2>
+    <div class="card" style="text-align:center"><div style="font-size:1.2rem"><b>إشراف المعلمة:</b> مرام بودال</div></div>
+    <div class="card" style="text-align:center"><div style="font-size:1.2rem;margin-bottom:8px"><b>إعداد الطالبات:</b></div><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center"><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">فاطمة العبيدي</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">ايثار الحربي</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">غاده العمري</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">فاطمة القرشي</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">رفاعة عدنان</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">هديل باقدو</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">رامه عسكر</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">ريماس انس</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">داليا أحمد</span><span style="background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 14px">جيداء علاء</span></div></div>
+    <div class="row" style="justify-content:center"><button class="btn ghost" style="color:var(--accent)" id="again">إعادة العرض من البداية</button></div>
+  </section>
+
+  <div class="foot"><button class="btn" id="prev">السابق</button><button class="btn" id="next">التالي</button></div>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var CAPS=[[0,'رحلة عبر البراكين… لنبدأ من الفضاء.'],[5,'إيطاليا، فيزوف: في عام 79م ثار البركان وغطّى الرماد مدينة بومبي خلال يومين تقريباً.'],[15,'هاواي: بركان درعي تسيل منه الحمم ببطء، وهذا مثال للثوران الهادئ.'],[22,'أيسلندا: بركان فوق الجليد يخرج منه البخار الحار، وهنا يتحول الخطر إلى فائدة.'],[29,'اليابان، جبل فوجي: بركان هادئ منذ قرون، وهو مثال للبركان الخامد.'],[35,'السعودية، حرّة رهط قرب المدينة المنورة: حقل حمم قديم في بلادنا.'],[42,'والآن نغوص عبر القشرة إلى غرفة الماغما، ثم نصعد في القناة حتى الفوهة.'],[49,'فكيف يرصد العلماء ذلك؟ وما دور العلوم والتكنولوجيا والهندسة والرياضيات في حماية الإنسان؟']],T=56;
+var fc=$('film'),f=fc.getContext('2d'),capEl=$('cap'),playB=$('play'),t0=0,raf=0,ash=[],lastCap=-1,lastK=-1,houses=[];
+for(var h=0;h<22;h++){houses.push([h<11?40+h*24:690+(h-11)*24,14+Math.random()*16])}
+function lp(a,b,k){return a+(b-a)*k}
+function mix(c1,c2,k){return 'rgb('+c1.map(function(v,i){return Math.round(lp(v,c2[i],k))}).join(',')+')'}
+function cl(x){return Math.max(0,Math.min(1,x))}
+function vesu(t){
+ var dk=cl((t-8)/6),sx=0,sy=0;
+ if(t>5&&t<16){var a=t<10?(t-5)/5*4:6;sx=(Math.random()-.5)*a;sy=(Math.random()-.5)*a}
+ f.save();f.translate(sx,sy);
+ var g=f.createLinearGradient(0,0,0,540);g.addColorStop(0,mix([77,171,247],[26,15,11],dk));g.addColorStop(1,mix([255,216,168],[110,30,10],dk));
+ f.fillStyle=g;f.fillRect(-10,-10,980,560);
+ if(dk>.6){f.fillStyle='rgba(255,255,255,'+(dk-.6)+')';for(var s=0;s<30;s++){f.fillRect((s*97)%960,(s*53)%200,2,2)}}
+ f.fillStyle='rgba(255,224,102,'+(1-dk)+')';f.beginPath();f.arc(170,110,40,0,7);f.fill();
+ var mg=f.createLinearGradient(0,200,0,540);mg.addColorStop(0,'#5a4338');mg.addColorStop(1,'#1c120e');f.fillStyle=mg;f.beginPath();f.moveTo(150,540);f.lineTo(430,200);f.lineTo(530,200);f.lineTo(810,540);f.fill();
+ f.fillStyle='rgba(0,0,0,.35)';f.beginPath();f.moveTo(480,200);f.lineTo(530,200);f.lineTo(810,540);f.lineTo(600,540);f.fill();
+ f.fillStyle='#8d6e63';f.fillRect(0,500,960,40);
+ houses.forEach(function(q){f.fillStyle='#d7b99a';f.fillRect(q[0],500-q[1],18,q[1]);f.fillStyle='#a1583a';f.fillRect(q[0]-2,498-q[1],22,4)});
+ if(t>10){var gl=cl((t-10)/2),rg=f.createRadialGradient(480,200,5,480,200,120);rg.addColorStop(0,'rgba(255,140,40,'+gl+')');rg.addColorStop(1,'rgba(255,90,20,0)');f.fillStyle=rg;f.fillRect(300,60,360,300)}
+ if(t>5&&t<10&&Math.random()<.25)ash.push({x:480,y:200,vx:(Math.random()-.5)*1.2,vy:-1-Math.random(),r:6,l:60,g:1});
+ if(t>10&&t<19){for(var i=0;i<6;i++)ash.push({x:480+(Math.random()-.5)*30,y:200,vx:(Math.random()-.5)*2.2,vy:-3-Math.random()*5,r:8+Math.random()*14,l:130,g:Math.random()<.3?0:1})}
+ ash.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.012;p.l--;p.r+=.15;f.globalAlpha=Math.max(0,p.l/150)*.8;f.fillStyle=p.g?'#6c6360':'#ff7a3d';f.beginPath();f.arc(p.x,p.y,p.r,0,7);f.fill()});
+ f.globalAlpha=1;ash=ash.filter(function(p){return p.l>0});
+ if(t>16){var p2=cl((t-16)/6);f.fillStyle='rgba(95,80,72,.92)';f.beginPath();f.moveTo(480,205);f.lineTo(480+p2*520,540);f.lineTo(480-p2*520,540);f.fill();f.strokeStyle='rgba(255,122,61,.9)';f.lineWidth=5;f.beginPath();f.moveTo(480,205);f.lineTo(480+p2*520,540);f.moveTo(480,205);f.lineTo(480-p2*520,540);f.stroke()}
+ f.restore();
+}
+var SC=[[0,''],[5,'١ · إيطاليا — فيزوف'],[15,'٢ · هاواي — بركان درعي'],[22,'٣ · أيسلندا — نار وجليد'],[29,'٤ · اليابان — جبل فوجي'],[35,'٥ · السعودية — حرّة رهط'],[42,'٦ · باطن الأرض'],[49,'']];
+function sc(t){var k=0;SC.forEach(function(s,i){if(t>=s[0])k=i});return k}
+function rnd(n){var x=Math.sin(n*127.1)*43758.5;return x-Math.floor(x)}
+function sky(a,b){var g=f.createLinearGradient(0,0,0,540);g.addColorStop(0,a);g.addColorStop(1,b);f.fillStyle=g;f.fillRect(-10,-10,980,560)}
+function tri(a,b,c,d,e,g,col){f.fillStyle=col;f.beginPath();f.moveTo(a,b);f.lineTo(c,d);f.lineTo(e,g);f.closePath();f.fill()}
+function glow(x,y,r,c){var g=f.createRadialGradient(x,y,2,x,y,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,90,20,0)');f.fillStyle=g;f.fillRect(x-r,y-r,2*r,2*r)}
+function steam(x,y,t,n,sp){for(var i=0;i<n;i++){var p=(t*sp+i/n)%1;f.globalAlpha=(1-p)*.5;f.fillStyle='#eef6fa';f.beginPath();f.arc(x+Math.sin(p*6+i)*20+p*30,y-p*220,10+p*40,0,7);f.fill()}f.globalAlpha=1}
+function txt(s,x,y,sz,al){f.font='bold '+sz+'px Tajawal,Tahoma,Arial';f.textAlign=al||'center';f.direction='rtl';f.lineWidth=6;f.strokeStyle='rgba(0,0,0,.65)';f.fillStyle='#fff';f.strokeText(s,x,y);f.fillText(s,x,y)}
+function space(t){sky('#02030a','#0a1230');
+ for(var s=0;s<70;s++){f.globalAlpha=.4+.6*Math.abs(Math.sin(t*2+s));f.fillStyle='#fff';f.fillRect(rnd(s)*960,rnd(s+99)*540,2,2)}f.globalAlpha=1;
+ var r=200+t*55,cy=500+t*24,sp=[[420,-.55],[560,-.4],[310,-.3]];
+ f.save();f.beginPath();f.arc(480,cy,r,0,7);f.clip();
+ var g=f.createRadialGradient(400,cy-r*.5,r*.1,480,cy,r);g.addColorStop(0,'#3d8fe0');g.addColorStop(1,'#0b2a63');f.fillStyle=g;f.fillRect(0,0,960,540);
+ f.fillStyle='#3f8f4a';sp.forEach(function(b){f.beginPath();f.ellipse(b[0],cy+b[1]*r,.3*r,.1*r,0,0,7);f.fill()});
+ sp.forEach(function(b,i){glow(b[0],cy+b[1]*r,30+10*Math.sin(t*4+i),'rgba(255,140,40,.9)')});
+ f.restore();
+ f.strokeStyle='rgba(130,200,255,.45)';f.lineWidth=8;f.beginPath();f.arc(480,cy,r+4,0,7);f.stroke();
+ if(t<4.2){f.globalAlpha=cl(1-(t-3)/1.2);txt('رحلة عبر البراكين',480,110,72);f.globalAlpha=1}}
+function hawaii(t){var lt=t-15;sky('#2b1740','#ff9a5a');
+ f.fillStyle='#ffd27a';f.beginPath();f.arc(780,330,36,0,7);f.fill();
+ f.fillStyle='#143a5c';f.fillRect(0,425,960,120);
+ f.fillStyle='#3a2a26';f.beginPath();f.moveTo(-20,430);f.quadraticCurveTo(480,170,980,430);f.closePath();f.fill();
+ glow(480,262,150,'rgba(255,150,50,.7)');f.lineCap='round';
+ [.1,.22,.34,.66,.78,.9].forEach(function(u,i){var x=-20*(1-u)*(1-u)+960*u*(1-u)+980*u*u,y=430*(1-u)*(1-u)+340*u*(1-u)+430*u*u;
+  f.beginPath();f.moveTo(480,262);f.quadraticCurveTo((480+x)/2+(x<480?-12:12),(262+y)/2-10,x,y);
+  f.setLineDash([]);f.strokeStyle='#d8420f';f.lineWidth=7;f.stroke();
+  f.setLineDash([16,14]);f.lineDashOffset=-lt*(14+i*3);f.strokeStyle='#ffd36b';f.lineWidth=3;f.stroke()});
+ f.setLineDash([]);
+ for(var i=0;i<14;i++){var p=(lt*.7+i/14)%1,x=480+(rnd(i)-.5)*220*p,y=262-Math.sin(p*3.14)*110;f.globalAlpha=1-p*.6;f.fillStyle='#ffb347';f.beginPath();f.arc(x,y,4,0,7);f.fill()}f.globalAlpha=1;
+ steam(560,425,lt,4,.1)}
+function iceland(t){var lt=t-22;sky('#0b2140','#7fb8de');
+ for(var b=0;b<3;b++){f.fillStyle='rgba(80,255,170,'+(.12+.05*b)+')';f.beginPath();f.moveTo(0,40+b*30);for(var x=0;x<=960;x+=40)f.lineTo(x,50+b*30+Math.sin(x*.01+lt*.8+b)*25);f.lineTo(960,150+b*30);f.lineTo(0,150+b*30);f.fill()}
+ tri(240,450,480,200,720,450,'#3b3f47');tri(422,260,480,200,538,260,'#f2f8fc');glow(480,205,50,'rgba(255,120,40,.8)');
+ f.fillStyle='#e6f2f8';f.fillRect(0,440,960,100);
+ f.fillStyle='#bcdcec';[[40,455,200],[300,470,260],[620,452,180],[800,478,150]].forEach(function(s){f.fillRect(s[0],s[1],s[2],10)});
+ f.fillStyle='#3fc4c4';f.beginPath();f.ellipse(190,490,110,24,0,0,7);f.fill();
+ steam(480,205,lt,6,.15);steam(190,485,lt,4,.12)}
+function fuji(t){var lt=t-29;sky('#7fb8ee','#fde7d0');
+ f.fillStyle='#ff5a4a';f.beginPath();f.arc(170,120,44,0,7);f.fill();
+ f.fillStyle='#3f5b87';f.beginPath();f.moveTo(40,450);f.quadraticCurveTo(400,390,455,190);f.lineTo(505,190);f.quadraticCurveTo(560,390,920,450);f.closePath();f.fill();
+ f.fillStyle='#f4f7fb';f.beginPath();f.moveTo(455,190);f.lineTo(505,190);f.lineTo(526,262);f.lineTo(506,246);f.lineTo(494,290);f.lineTo(478,248);f.lineTo(462,288);f.lineTo(448,246);f.lineTo(434,262);f.closePath();f.fill();
+ f.fillStyle='rgba(255,255,255,.85)';[0,1,2].forEach(function(c){var x=(c*400+lt*14*(c+1))%1200-120;f.beginPath();f.ellipse(x,100+c*55,90+c*10,24,0,0,7);f.fill()});
+ f.fillStyle='#5fa3c9';f.fillRect(0,450,960,90);f.globalAlpha=.3;tri(300,450,480,540,660,450,'#3f5b87');f.globalAlpha=1;
+ f.fillStyle='#ffb7c9';for(var i=0;i<18;i++){f.beginPath();f.arc((rnd(i)*960+lt*25)%960,(rnd(i+7)*540+lt*45)%540,4,0,7);f.fill()}}
+function harra(t){var lt=t-35;sky('#f08a4b','#ffe3a8');
+ f.fillStyle='#fff1b8';f.beginPath();f.arc(740,300,40,0,7);f.fill();
+ f.save();f.translate(-lt*6,0);
+ f.fillStyle='#d9a35c';f.beginPath();f.moveTo(-60,540);f.lineTo(-60,380);f.quadraticCurveTo(200,340,420,390);f.quadraticCurveTo(700,430,1100,360);f.lineTo(1100,540);f.fill();
+ f.fillStyle='#1d1613';f.beginPath();f.moveTo(-60,540);f.lineTo(-60,440);for(var x=-60;x<=1100;x+=40)f.lineTo(x,430+rnd(x)*30+Math.sin(x*.01)*14);f.lineTo(1100,540);f.fill();
+ tri(260,438,320,360,380,438,'#3a2b25');tri(620,445,690,370,760,445,'#3a2b25');
+ f.fillStyle='#2a1f1a';for(var i=0;i<26;i++){f.beginPath();f.ellipse(rnd(i)*1100-40,470+rnd(i+3)*60,10+rnd(i+9)*14,6+rnd(i+11)*6,0,0,7);f.fill()}
+ f.restore()}
+function dive(t){var lt=t-42,e=cl(lt/3.5),e2=cl((lt-3.5)/3),cam=lt<3.5?640*e*e*(3-2*e):640*(1-e2*e2*(3-2*e2));
+ f.save();f.translate(0,-cam);
+ var g=f.createLinearGradient(0,-100,0,300);g.addColorStop(0,'#6aa7e0');g.addColorStop(1,'#f0d9b8');f.fillStyle=g;f.fillRect(0,-100,960,400);
+ g=f.createLinearGradient(0,300,0,1300);g.addColorStop(0,'#6b4f3f');g.addColorStop(.4,'#3a2418');g.addColorStop(1,'#8a2a10');f.fillStyle=g;f.fillRect(0,300,960,1000);
+ f.strokeStyle='rgba(255,255,255,.08)';f.lineWidth=3;[360,440,530,620].forEach(function(y){f.beginPath();f.moveTo(0,y);f.quadraticCurveTo(480,y+30,960,y-10);f.stroke()});
+ tri(250,300,480,200,710,300,'#5a4338');f.fillStyle='#ff7a3d';f.fillRect(470,205,20,640);
+ glow(480,880,230,'rgba(255,200,90,'+(.7+.2*Math.sin(t*5))+')');
+ f.fillStyle='#ff5a1e';f.beginPath();f.ellipse(480,880,150,70,0,0,7);f.fill();f.fillStyle='#ffd36b';f.beginPath();f.ellipse(480,880,90,34,0,0,7);f.fill();
+ for(var i=0;i<8;i++){var p=(lt*.5+i/8)%1;f.fillStyle='#fff3b0';f.beginPath();f.arc(480,850-p*640,6,0,7);f.fill()}
+ txt('القشرة الأرضية',200,470,34);txt('القناة البركانية',720,560,34);txt('غرفة الماغما',200,890,34);
+ if(lt>6.1){var q=cl((lt-6.1)/.9);for(var j=0;j<24;j++){var a=rnd(j)*Math.PI,r=q*(80+rnd(j+5)*160);f.globalAlpha=1-q*.5;f.fillStyle=j%3?'#ff7a3d':'#6c6360';f.beginPath();f.arc(480+Math.cos(a)*r*.7,200-Math.sin(a)*r,8+rnd(j)*10,0,7);f.fill()}f.globalAlpha=1}
+ f.restore();
+ if(lt>6.1){f.fillStyle='rgba(255,210,140,'+cl(1-(lt-6.1)/.7)*.8+')';f.fillRect(0,0,960,540)}}
+function fin(t){var lt=t-49;f.fillStyle='#0b0706';f.fillRect(-10,-10,980,560);
+ f.strokeStyle='rgba(255,106,43,.15)';f.lineWidth=1;for(var x=0;x<=960;x+=60){f.beginPath();f.moveTo(x,60);f.lineTo(x,480);f.stroke()}for(var y=60;y<=480;y+=60){f.beginPath();f.moveTo(0,y);f.lineTo(960,y);f.stroke()}
+ f.strokeStyle='#ff7a3d';f.lineWidth=3;f.shadowColor='#ff6a2b';f.shadowBlur=14;f.beginPath();
+ for(var x=0;x<=960;x+=4){var a=6+90*cl(lt/5)*Math.pow(Math.sin(x*.004+lt*.6),2),y=270+a*Math.sin(x*.09-lt*9)*(.6+.4*Math.sin(x*.023+lt));x?f.lineTo(x,y):f.moveTo(x,y)}
+ f.stroke();f.shadowBlur=0;f.globalAlpha=cl(lt/1.5);txt('رصد البراكين',480,110,48);f.globalAlpha=1}
+function draw(t){var k=sc(t);if(k!=lastK){lastK=k;ash=[]}
+ [function(){space(t)},function(){vesu(3+(t-5)*1.7)},function(){hawaii(t)},function(){iceland(t)},function(){fuji(t)},function(){harra(t)},function(){dive(t)},function(){fin(t)}][k]();
+ var vg=f.createRadialGradient(480,270,200,480,270,620);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.7)');f.fillStyle=vg;f.fillRect(0,0,960,540);
+ var b=SC[k],d=t-b[0];if(k&&d<.6){f.fillStyle='rgba(0,0,0,'+(1-d/.6)+')';f.fillRect(0,0,960,540)}
+ if(b[1]){f.globalAlpha=cl((d-.4)/.5);f.fillStyle='rgba(0,0,0,.5)';f.fillRect(560,26,376,58);txt(b[1],920,66,30,'right');f.globalAlpha=1}}
+var VOICE=true,voices=[],sid=0,wdT=0,tv=0,seg=-1,sdone=false,lastT=0;
+function pickV(){voices=speechSynthesis.getVoices().filter(function(v){return /^ar/i.test(v.lang)})}
+if(window.speechSynthesis){pickV();speechSynthesis.onvoiceschanged=pickV}
+function stopSay(){sid++;clearTimeout(wdT);if(window.speechSynthesis)speechSynthesis.cancel()}
+function say(txt,done){stopSay();var id=sid;wdT=setTimeout(function(){if(id==sid&&done)done()},txt.length*60+600)}
+function setVoice(on){VOICE=on;if(rg&&inApp)rg.gain.setTargetAtTime(on?.1:0,AC.currentTime,.2);if(!on){stopSay();sdone=true}
+ [$('snd'),$('vt2')].forEach(function(b){b.innerText=on?'🔊 الصوت':'🔇 صامت'})}
+$('snd').onclick=$('vt2').onclick=function(){setVoice(!VOICE)};setVoice(true);
+function showCap(s){capEl.style.opacity=0;setTimeout(function(){capEl.innerText=s;capEl.style.opacity=1},200)}
+function nextSeg(){seg++;sdone=false;showCap(CAPS[seg][1]);say(CAPS[seg][1],function(){sdone=true})}
+function startApp(){cancelAnimationFrame(raf);stopSay();sfxStart();inApp=1;if(rg)rg.gain.setTargetAtTime(VOICE?.1:0,AC.currentTime,.5);$('story').className='screen';$('app').style.display='block';document.body.classList.add('pr');go(0)}
+var AC=null,rum=null,rg=null,boomed=0,inApp=0;
+function sfxStart(){if(AC&&rum)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume();
+ var n=AC.sampleRate*2,buf=AC.createBuffer(1,n,AC.sampleRate),d=buf.getChannelData(0),l=0;for(var i=0;i<n;i++){l=(l+.02*(Math.random()*2-1))/1.02;d[i]=l*6}
+ rum=AC.createBufferSource();rum.buffer=buf;rum.loop=true;var f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=320;rg=AC.createGain();rg.gain.value=0;rum.connect(f);[48,96].forEach(function(fr,k){var o=AC.createOscillator(),og=AC.createGain();o.type=k?'triangle':'sawtooth';o.frequency.value=fr;og.gain.value=.35;o.connect(og);og.connect(f);o.start();(rum.o=rum.o||[]).push(o)});f.connect(rg);rg.connect(AC.destination);rum.start();
+ AC.resume().then(function(){$('vn').innerText=AC.state=='running'?'🔊 المؤثرات تعمل':'⚠️ المتصفح منع الصوت، تأكدي من صوت الجهاز';setTimeout(function(){sfxN(.7,600,.9)},50)})}catch(e){$('vn').innerText='⚠️ تعذّر تشغيل الصوت في هذا المتصفح'}}
+function sfxN(dur,fq,vol){if(!AC||!VOICE)return;try{var n=Math.floor(AC.sampleRate*dur),buf=AC.createBuffer(1,n,AC.sampleRate),d=buf.getChannelData(0);for(var i=0;i<n;i++)d[i]=Math.random()*2-1;
+ var src=AC.createBufferSource();src.buffer=buf;var f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=fq;var g=AC.createGain();g.gain.setValueAtTime(vol,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dur);src.connect(f);f.connect(g);g.connect(AC.destination);src.start()}catch(e){}}
+function sfx(t){if(!rg)return;var vs=[.15,.8,.4,.3,.12,.2,.6,.3],v=!VOICE?0:vs[sc(t)];rg.gain.setTargetAtTime(v,AC.currentTime,.3);
+ if(VOICE&&t>9&&!(boomed&1)){boomed|=1;sfxN(2,700,1)}
+ if(VOICE&&t>48.3&&!(boomed&2)){boomed|=2;sfxN(2.5,500,1)}
+ if(VOICE&&t>9&&t<22&&Math.random()<.2)sfxN(.06,3500,.2)}
+function tick(now){var dt=Math.min(.1,(now-lastT)/1000),nx=seg<CAPS.length-1?CAPS[seg+1][0]:T;lastT=now;tv+=dt;sfx(tv);
+ if(!sdone&&tv>nx-.02)tv=nx-.02;
+ if(sdone&&tv>=nx){if(seg<CAPS.length-1){nextSeg()}else{draw(T);playB.innerText='ابدئي العرض ←';playB.onclick=startApp;playB.style.display='';return}}
+ draw(tv);raf=requestAnimationFrame(tick)}
+playB.onclick=function(){playB.style.display='none';
+ sfxStart();boomed=0;
+ tv=0;seg=-1;lastT=performance.now();nextSeg();raf=requestAnimationFrame(tick)};
+$('skip').onclick=startApp;
+draw(0);capEl.innerText='اضغطي تشغيل لتبدأ الرحلة';
+
+var secs=[].slice.call(document.querySelectorAll('[data-s]')),cur=0;
+function fit(s){var hd=document.querySelector('header.top').offsetHeight,ft=document.querySelector('.foot').offsetHeight,av=innerHeight-hd-ft-8,vw=innerWidth,k;
+ for(k=1.4;k>=.45;k-=.05){var w=Math.min(vw,1500)/k;s.style.width=w+'px';s.style.transform='scale('+k+')';s.style.marginLeft='0';s.style.marginTop='0';s.style.marginRight=((vw-w*k)/2)+'px';if(s.offsetHeight*k<=av)break}
+ k=Math.max(k,.45);s.style.marginTop=Math.max(0,(av-s.offsetHeight*k)/2)+'px';s.setAttribute('data-k',k.toFixed(2))}
+onresize=function(){if(inApp)fit(secs[cur])};
+function go(n){cur=n;stopSay();secs.forEach(function(s,i){s.className='screen'+(i==n?' on':'')});
+ $('prog').style.width=((n+1)/secs.length*100)+'%';$('pn').innerText=(n+1)+'/'+secs.length;
+ $('prev').disabled=n==0;$('next').disabled=n==secs.length-1;fit(secs[n])}
+$('next').onclick=function(){go(cur+1)};$('prev').onclick=function(){go(cur-1)};
+$('again').onclick=function(){location.reload()};
+[].forEach.call(document.querySelectorAll('.flip'),function(x){x.onclick=function(){x.classList.toggle('on')}});
+
+var info={cone:'المخروط البركاني: التل الذي يتكوّن من تراكم الحمم والرماد بعد تصلّبها.',chamber:'غرفة الماغما: تجويف تحت الأرض تتجمع فيه الماغما.',conduit:'القناة البركانية: الممر الذي تصعد منه الماغما نحو السطح.',crater:'الفوهة: فتحة القمة التي يخرج منها الثوران.'};
+[].forEach.call(document.querySelectorAll('.part'),function(p){p.onclick=function(){
+ [].forEach.call(document.querySelectorAll('.part'),function(x){x.classList.remove('sel')});
+ p.classList.add('sel');$('partInfo').innerText=info[p.getAttribute('data-k')]}});
+
+[].forEach.call(document.querySelectorAll('.step'),function(b){b.onclick=function(){
+ [].forEach.call(document.querySelectorAll('.step'),function(x){x.classList.remove('on')});
+ b.classList.add('on');$('stepInfo').innerText=b.getAttribute('data-t')}});
+
+var cv=$('cv'),c=cv.getContext('2d'),P=[],run=false,em={n:0,m:1};
+function base(){c.clearRect(0,0,800,480);var mg=c.createLinearGradient(0,220,0,480);mg.addColorStop(0,'#5a4338');mg.addColorStop(1,'#140b08');c.fillStyle=mg;c.beginPath();c.moveTo(120,480);c.lineTo(330,220);c.lineTo(470,220);c.lineTo(680,480);c.fill();if(P.length){var rg=c.createRadialGradient(400,222,4,400,222,130);rg.addColorStop(0,'rgba(255,140,40,.55)');rg.addColorStop(1,'rgba(255,90,20,0)');c.fillStyle=rg;c.fillRect(250,100,300,240)}}
+var V=.5;
+function sy(x){return x<330?220+(330-x)*1.238:x>470?220+(x-470)*1.238:220}
+function loop(){base();
+ if(em.n>0){var k=Math.ceil(1+V*5);for(var i=0;i<k&&em.n>0;i++){em.n--;
+  P.push(V>.55?{x:400+(Math.random()-.5)*20,y:222,vx:(Math.random()-.5)*(3+V*7),vy:-(6+V*12)*(.5+Math.random()*.5),r:3+Math.random()*7,l:90+Math.random()*80,gv:.12,t:Math.random()<.45?1:0,a:0}
+  :{x:400+(Math.random()-.5)*14,y:222,vx:(Math.random()-.5)*2.6,vy:-(2+V*6)*(.6+Math.random()*.4),r:3+Math.random()*3,l:200,gv:.06,t:0,a:1})}}
+ P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=p.gv;p.l--;var s=sy(p.x);
+  if(p.a&&p.y>=s-2&&p.vy>0){p.y=s-2;p.vy=0;p.gv=0;if(!p.set){p.set=1;p.vx=(p.x<400?-1:1)*(.5+Math.random()*.6)}}
+  var age=p.l/200;c.globalCompositeOperation=p.t?'source-over':'lighter';
+  c.globalAlpha=p.t?Math.min(.4,p.l/200):Math.min(1,p.l/30)*.9;
+  c.fillStyle=p.t?'#8a8480':(p.a?(age>.5?'#ffb347':age>.25?'#ff5a1f':'#8a1c0a'):'#ff7a3d');
+  if(p.t)p.r+=.25;
+  c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill()});
+ c.globalAlpha=1;c.globalCompositeOperation='source-over';
+ P=P.filter(function(p){return p.l>0&&p.y<490});
+ if(P.length||em.n>0){requestAnimationFrame(loop)}else{run=false}}
+function go2(n){em.n=n;if(!run){run=true;loop()}}
+$('e1').onclick=function(){go2(Math.round(120+V*320))};
+$('vs').oninput=function(){V=this.value/100;$('vl').innerText=V<.33?'منخفضة (سائلة)':V<.66?'متوسطة':'عالية (لزجة)';$('vh').innerText=V<.55?'ماغما سائلة: تتسرب الغازات بسهولة فيكون الثوران هادئاً وتسيل الحمم على الجوانب.':'ماغما لزجة: تحبس الغازات داخلها فيرتفع الضغط حتى ينفجر الثوران بقوة.'};
+$('vs').oninput();base();
+
+var sz=$('sz').getContext('2d'),ph=0,sa=8;
+$('sl').oninput=function(){sa=+this.value};
+(function z(){ph+=1;sz.clearRect(0,0,800,200);sz.strokeStyle='#3a221a';sz.lineWidth=1;sz.beginPath();sz.moveTo(0,100);sz.lineTo(800,100);sz.stroke();
+ sz.strokeStyle=sa>66?'#ff3b1f':sa>33?'#ffb347':'#51cf66';sz.lineWidth=2;sz.beginPath();
+ for(var x=0;x<800;x+=4){var y=100+(Math.sin((x+ph*4)/9)*.5+Math.sin((x+ph*7)/3.1)*.3+(Math.random()-.5)*.8)*sa*.9;x?sz.lineTo(x,y):sz.moveTo(x,y)}
+ sz.stroke();
+ $('st').innerText=sa>66?'🚨 إنذار: نشاط مرتفع جداً، بدء خطة الإخلاء':sa>33?'⚠️ تحذير: نشاط متزايد، زيادة المراقبة':'✅ الوضع طبيعي';
+ $('st').style.color=sa>66?'#ff6b4a':sa>33?'#ffb347':'#51cf66';
+ requestAnimationFrame(z)})();
+
+var ga=$('va').getContext('2d'),gb=$('vb').getContext('2d'),gc=$('vc').getContext('2d'),VA={P:[],n:0},VB={P:[],n:0,h:0},VC={er:0},lastB='';
+function cone(g,er,gr,hot){g.clearRect(0,0,400,260);
+ var ty=lp(90,175,er),tw=lp(32,85,er);
+ g.fillStyle=mix([90,67,56],[70,125,60],gr);g.beginPath();g.moveTo(30,240);g.lineTo(200-tw,ty);g.lineTo(200+tw,ty);g.lineTo(370,240);g.fill();
+ g.fillStyle='#2a1a13';g.fillRect(0,240,400,20);
+ if(hot>0){var rg=g.createRadialGradient(200,ty,3,200,ty,90);rg.addColorStop(0,'rgba(255,140,40,'+hot+')');rg.addColorStop(1,'rgba(255,90,20,0)');g.fillStyle=rg;g.fillRect(100,ty-90,200,180)}
+ return ty}
+function burst(P,ty,n){for(var i=0;i<n;i++)P.push({x:200+(Math.random()-.5)*20,y:ty,vx:(Math.random()-.5)*5,vy:-(4+Math.random()*6),r:2+Math.random()*4,l:70+Math.random()*50,s:Math.random()<.4})}
+function parts(g,P){P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.15;p.l--;g.globalAlpha=Math.max(0,Math.min(1,p.l/30))*(p.s?.45:.9);g.fillStyle=p.s?'#8a8480':'#ff7a3d';g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill()});g.globalAlpha=1;return P.filter(function(p){return p.l>0})}
+function erA(){VA.n=80;$('ta').innerText='🔥 يثور الآن! البركان النشط يحتاج إلى مراقبة مستمرة.';say('البركان النشط يثور حالياً، ويحتاج إلى مراقبة مستمرة.')}
+$('ba').onclick=$('va').onclick=erA;
+function hitB(){if(VB.n)return;VB.h=Math.min(1,VB.h+.22);if(VB.h>=1){VB.n=90;say('استيقظ البركان الخامد! فقد ينشط مرة أخرى، لذلك نراقبه.')}}
+$('bb').onclick=$('vb').onclick=hitB;
+var CT=['بعد توقفه عن الثوران يبرد البركان ويتصلب صخره.','تعمل الرياح والأمطار على تآكل المخروط ببطء عبر ملايين السنين.','يتآكل المخروط وتنمو النباتات، ولا توجد ماغما تحت البركان، فلن يثور مرة أخرى.'];
+function stC(){var k=VC.er<.33?0:VC.er<.66?1:2;if($('tc').getAttribute('data-k')!=k){$('tc').setAttribute('data-k',k);$('tc').innerText=CT[k]}return k}
+$('vcs').oninput=function(){VC.er=this.value/100;stC()};
+$('vcs').onchange=function(){say(CT[stC()])};
+(function vl(){var ty;
+ ty=cone(ga,0,0,.4+Math.sin(Date.now()/400)*.15);if(VA.n>0){VA.n--;burst(VA.P,ty,2)}VA.P=parts(ga,VA.P);
+ gb.save();if(VB.h>.6)gb.translate((Math.random()-.5)*VB.h*6,0);
+ ty=cone(gb,0,0,VB.h*.9);gb.fillStyle='rgba(255,106,43,'+VB.h+')';gb.beginPath();gb.ellipse(200,248,70,12,0,0,7);gb.fill();
+ if(VB.n>0){VB.n--;burst(VB.P,ty,3);if(!VB.n)VB.h=.1}else if(VB.h<1)VB.h=Math.max(0,VB.h-.0006);
+ VB.P=parts(gb,VB.P);
+ if(VB.h<.15&&!VB.n){gb.fillStyle='#fff';gb.font='bold 22px sans-serif';gb.fillText('Z z z',215,ty-14-Math.sin(Date.now()/500)*4)}
+ gb.restore();
+ var s=VB.n?'🌋 استيقظ! البركان الخامد قد ينشط مرة أخرى.':VB.h<.15?'😴 نائم: لا نشاط حالياً. اضغطي الزر لتحريك باطن الأرض.':VB.h<.6?'♨️ ترتفع الحرارة تحت البركان...':'⚠️ اهتزازات! الماغما تصعد نحو السطح.';
+ if(s!=lastB){lastB=s;$('tb').innerText=s}
+ cone(gc,VC.er,VC.er,0);
+ requestAnimationFrame(vl)})();stC();
+
+[].forEach.call(document.querySelectorAll('.g'),function(l){l.onclick=function(){l.classList.toggle('d');var n=document.querySelectorAll('.g.d').length;$('gc').innerText=n+'/6';if(n==6)say('أحسنتِ! أنهيتِ كل أهداف المشروع.')}});
+[].forEach.call(document.querySelectorAll('.hz'),function(s){s.onclick=function(){s.innerText=s.innerText=='🏠'?'💡':'🏠';var n=[].filter.call(document.querySelectorAll('.hz'),function(x){return x.innerText=='💡'}).length;$('hst').innerText=n?n+' من 5 بيوت مضاءة بطاقة باطن الأرض ⚡':'';if(n==5)say('في أيسلندا تنتج حرارة باطن الأرض كهرباء وتدفئة نظيفة.')}});
+var PS=['🌰','🌱','🌿','🌳','🍎'],pk=0;
+$('pl2').onclick=function(){pk=(pk+1)%PS.length;$('pe').innerText=PS[pk];$('pt').innerText=pk?'الرماد غني بالمعادن، فتنمو النباتات بسرعة.':'تربة بركانية'};
+var gp=$('pl').getContext('2d'),PV=0,PT=['الصفيحتان بعيدتان، لا نشاط بركاني هنا.','تقترب الصفيحتان من بعضهما ببطء.','تنزلق إحدى الصفيحتين تحت الأخرى وترتفع الحرارة والضغط.','تتكوّن الماغما وتبدأ بالصعود نحو السطح.','وصلت الماغما إلى السطح وتكوّن بركان جديد!'];
+function pst(){var v=PV/100;return v<.2?0:v<.45?1:v<.65?2:v<.9?3:4}
+function dp(){var v=PV/100,g=gp;g.clearRect(0,0,400,260);
+ g.fillStyle='#7a2a0e';g.fillRect(0,168,400,92);
+ var fx=30+v*230,ex=Math.max(0,fx-205);g.strokeStyle='#3b7aa8';g.lineWidth=34;g.lineCap='butt';g.beginPath();g.moveTo(0,185);g.lineTo(Math.min(fx,205),185);if(ex)g.lineTo(205+ex*.8,185+ex*.6);g.stroke();
+ g.fillStyle='#6b5547';g.fillRect(215,125,185,40);
+ if(v>.35){var m=cl((v-.35)/.65),r=cl((v-.6)/.3),by=lp(205,125,r);g.fillStyle='#ff6a2b';if(r>0)g.fillRect(296,by,8,205-by);g.beginPath();g.arc(300,by,6+m*14,0,7);g.fill()}
+ if(v>.9){var ch=(v-.9)*10*55;g.fillStyle='#5a4338';g.beginPath();g.moveTo(255,125);g.lineTo(300,125-ch);g.lineTo(345,125);g.fill();g.fillStyle='#ff7a3d';g.fillRect(293,125-ch,14,4)}
+ g.fillStyle='#fff';g.font='13px Tajawal,sans-serif';g.fillText('صفيحة محيطية',8,190);g.fillText('صفيحة قارية',225,150)}
+$('pls').oninput=function(){PV=+this.value;$('plt').innerText=PT[pst()];dp()};
+$('pls').onchange=function(){say(PT[pst()])};
+$('plt').innerText=PT[0];dp();
+var gm=$('mc').getContext('2d'),MV=0;
+function dm(){var g=gm,v=MV/100,ty=cone(g,0,0,0),x,y;g.fillStyle='#a61e0a';g.beginPath();g.ellipse(200,246,70,10,0,0,7);g.fill();
+ if(v<.7){x=200;y=lp(235,ty,v/.7)}else{var k=(v-.7)/.3;x=lp(232,340,k);y=lp(ty,228,k)}
+ g.fillStyle='#ff6a2b';g.beginPath();g.arc(x,y,12,0,7);g.fill();g.fillStyle='#fff';g.font='14px Tajawal,sans-serif';g.fillText(v<.7?'ماغما':'حمم',x+16,y+5)}
+function mt(){return MV<70?'🔥 ماغما: صخر منصهر لا يزال داخل الأرض.':'🌋 حمم: خرج الصخر المنصهر إلى سطح الأرض.'}
+$('mcs').oninput=function(){MV=+this.value;$('mct').innerText=mt();dm()};
+$('mcs').onchange=function(){say(mt())};$('mct').innerText=mt();dm();
+function pe(v,t){$('vs').value=v;$('vs').oninput();$('e1').onclick();say(t)}
+$('eq').onclick=function(){pe(15,'في الثوران الهادئ تسيل الحمم ببطء على جوانب البركان.')};
+$('ex').onclick=function(){pe(92,'في الثوران الانفجاري تنطلق الغازات والرماد والصخور بقوة كبيرة.')};
+var gf=$('fx').getContext('2d'),FX={b:0,v:0,c:0,n:0,P:[],fired:0};
+function fsy(x){return x<170?130+(170-x)*1.833:x>230?130+(x-230)*1.833:130}
+function ftxt(){
+ if(FX.fired)return FX.c?'تفاعل الخل مع بيكربونات الصوديوم فأنتج غاز ثاني أكسيد الكربون، فاندفعت الرغوة الحمراء كأنها حمم تسيل على جوانب البركان.':'تفاعل الخل مع بيكربونات الصوديوم فأنتج غاز ثاني أكسيد الكربون، فاندفعت الرغوة إلى الأعلى. أضيفي ملوّن الطعام لتشبه الحمم.';
+ if(FX.b&&FX.c)return 'أضفنا البيكربونات والملوّن. لا يحدث ثوران حتى نضيف الخل.';
+ if(FX.v&&FX.c)return 'أضفنا الخل والملوّن. لا يحدث ثوران حتى نضيف بيكربونات الصوديوم.';
+ if(FX.b)return 'أضفنا بيكربونات الصوديوم (مسحوق أبيض) إلى الفوهة. ولا يحدث شيء بعد.';
+ if(FX.v)return 'أضفنا الخل إلى الفوهة. ولا يحدث شيء بعد.';
+ if(FX.c)return 'أضفنا ملوّن الطعام. ولا يحدث شيء بعد.';
+ return 'اضغطي على المواد لإضافتها إلى فوهة البركان.'}
+function dfx(){var g=gf;g.clearRect(0,0,400,260);
+ g.fillStyle='#8d6e63';g.beginPath();g.moveTo(110,240);g.lineTo(170,130);g.lineTo(230,130);g.lineTo(290,240);g.fill();
+ g.fillStyle='#2a1a13';g.beginPath();g.ellipse(200,130,30,7,0,0,7);g.fill();
+ if(FX.v){g.fillStyle='rgba(190,225,255,.85)';g.beginPath();g.ellipse(200,131,25,5,0,0,7);g.fill()}
+ if(FX.b){g.fillStyle='#fff';g.beginPath();g.ellipse(196,131,15,3.5,0,0,7);g.fill()}
+ if(FX.c){g.fillStyle='#e03131';g.beginPath();g.ellipse(206,130,9,2.8,0,0,7);g.fill()}
+ var col=FX.c?'#e03131':'#f1f3f5';
+ if(FX.n>0){for(var k=0;k<2&&FX.n>0;k++){FX.n--;FX.P.push({x:200+(Math.random()-.5)*30,y:130,vx:(Math.random()-.5)*3,vy:-(3+Math.random()*3.5),r:5+Math.random()*6,l:500,gv:.12,st:0})}
+  g.fillStyle=col;for(var j=0;j<6;j++){g.beginPath();g.arc(188+j*5+Math.sin(Date.now()/90+j)*3,126-Math.random()*10,10+(j%3)*3,0,7);g.fill()}}
+ FX.P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=p.gv;p.l--;var s=fsy(p.x);
+  if(!p.st&&p.vy>0&&p.y>=s-3){p.st=1;p.vy=0;p.gv=0;p.vx=(p.x<200?-1:1)*(.3+Math.random()*.4)}
+  if(p.st){p.y=Math.min(s-3,238);if(p.y>=236)p.vx=0}
+  g.globalAlpha=Math.min(1,p.l/60);g.fillStyle=col;g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill()});
+ g.globalAlpha=1;FX.P=FX.P.filter(function(p){return p.l>0})}
+(function fl(){dfx();requestAnimationFrame(fl)})();
+$('ft').innerText=ftxt();
+[].forEach.call(document.querySelectorAll('.fb'),function(b){b.onclick=function(){var k=b.getAttribute('data-k');if(FX[k])return;FX[k]=1;b.disabled=true;
+ var fire=FX.b&&FX.v&&!FX.fired&&k!='c';
+ if(fire){FX.fired=1;FX.n=160;sfxN(2.2,3500,.35);sfxN(1.2,500,.5)}
+ $('ft').innerText=ftxt();
+ if(fire)say('تفاعل الخل مع بيكربونات الصوديوم، فاندفعت الرغوة إلى الأعلى.')}});
+$('fr').onclick=function(){FX={b:0,v:0,c:0,n:0,P:[],fired:0};[].forEach.call(document.querySelectorAll('.fb'),function(b){b.disabled=false});$('ft').innerText=ftxt()};
+var stg=$('stc').getContext('2d'),meg=$('mec').getContext('2d');
+function scene(g,t){var s=g.createLinearGradient(0,0,0,360);s.addColorStop(0,'#14233a');s.addColorStop(1,'#3a1a10');g.fillStyle=s;g.fillRect(0,0,800,360);
+ g.fillStyle='#1c120e';g.fillRect(0,300,800,60);
+ var r=g.createRadialGradient(400,130,5,400,130,110);r.addColorStop(0,'rgba(255,140,40,'+(.5+.25*Math.sin(t*3))+')');r.addColorStop(1,'rgba(255,90,20,0)');g.fillStyle=r;g.fillRect(280,20,240,220);
+ var m=g.createLinearGradient(0,130,0,300);m.addColorStop(0,'#6b5042');m.addColorStop(1,'#2a1a13');g.fillStyle=m;g.beginPath();g.moveTo(230,300);g.lineTo(380,130);g.lineTo(420,130);g.lineTo(570,300);g.fill();
+ g.fillStyle='#ff7a3d';g.fillRect(382,128,36,5);g.textAlign='center';g.direction='rtl'}
+function lbl(g,x,y,tx){g.font='bold 14px Tajawal,Tahoma,Arial';g.lineWidth=3;g.strokeStyle='#000a';g.fillStyle='#fff';g.strokeText(tx,x,y);g.fillText(tx,x,y)}
+function emo(g,x,y,e,z){g.font=(z||30)+'px serif';g.fillStyle='#fff';g.fillText(e,x,y)}
+function drST(t){var g=stg,i,a;scene(g,t);
+ for(i=0;i<4;i++){a=(t*.45+i/4)%1;g.fillStyle='rgba(150,140,135,'+(1-a)*.5+')';g.beginPath();g.arc(400+Math.sin(t+i*2)*12,125-a*95,8+a*24,0,7);g.fill()}
+ for(i=0;i<3;i++){a=(t*.4+i/3)%1;g.strokeStyle='rgba(255,179,71,'+(1-a)+')';g.lineWidth=3;g.beginPath();g.ellipse(400,300,20+a*190,5+a*38,0,0,7);g.stroke()}
+ var dx=400+Math.sin(t*.8)*150,dy=95+Math.sin(t*2)*6,bm=g.createLinearGradient(0,dy,0,200);bm.addColorStop(0,'rgba(255,120,30,.55)');bm.addColorStop(1,'rgba(255,120,30,0)');g.fillStyle=bm;g.beginPath();g.moveTo(dx,dy+8);g.lineTo(dx-40,200);g.lineTo(dx+40,200);g.fill();
+ emo(g,dx,dy,'🚁');lbl(g,dx,dy-26,'طائرة مسيّرة');
+ var sx=60+(t*55)%680,sy=50+Math.sin(sx/110)*14;
+ g.setLineDash([6,6]);g.strokeStyle='rgba(120,220,255,.8)';g.lineWidth=2;g.beginPath();g.moveTo(sx,sy+8);g.lineTo(690,285);g.stroke();g.setLineDash([]);
+ emo(g,sx,sy+10,'🛰️');lbl(g,sx,sy+36,'قمر صناعي');
+ var p=(t*1.2)%1;g.strokeStyle='rgba(120,220,255,'+(1-p)+')';g.beginPath();g.arc(690,288,8+p*26,0,7);g.stroke();
+ emo(g,690,300,'📡');lbl(g,690,330,'مركز الرصد');lbl(g,400,340,'اهتزازات باطن الأرض 〰️')}
+function drME(t){var g=meg,i,k,u,x,y;scene(g,t);
+ g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.moveTo(40,170);g.lineTo(210,170);g.moveTo(40,170);g.lineTo(40,60);g.stroke();
+ for(i=0;i<4;i++){var h=(30+i*22)*(.75+.25*Math.sin(t*1.5+i)),gr=g.createLinearGradient(0,170-h,0,170);gr.addColorStop(0,'#ffb347');gr.addColorStop(1,'#ff6a2b');g.fillStyle=gr;g.fillRect(55+i*38,170-h,26,h)}
+ lbl(g,125,192,'📊 تمثيل البيانات');
+ var ly=300-Math.min(1,(t%6)/2.5)*170;
+ g.setLineDash([5,5]);g.strokeStyle='#7ee2a8';g.lineWidth=2;g.beginPath();g.moveTo(400,300);g.lineTo(400,ly);g.stroke();g.setLineDash([]);
+ g.fillStyle='#7ee2a8';g.fillRect(392,ly-1,16,3);lbl(g,452,215,'ارتفاع المخروط 📏');
+ g.strokeStyle='#ffd43b';g.lineWidth=3;g.beginPath();g.arc(570,300,48,Math.PI,Math.PI+.85);g.stroke();lbl(g,560,332,'زاوية الميل 📐');
+ for(i=0;i<9;i++){k=(t*.22+i/9)%1;if(k<.65){u=k/.65;x=410+u*160;y=130+u*170}else{u=(k-.65)/.35;x=570+u*62;y=300}
+  g.fillStyle='rgba(255,'+Math.round(110+80*(1-k))+',40,'+(1-k*.5)+')';g.beginPath();g.arc(x,y-4,6,0,7);g.fill()}
+ g.fillStyle='#9aa0a6';g.fillRect(636,258,14,42);g.fillStyle='#6c7177';for(i=0;i<3;i++)g.fillRect(636,264+i*13,14,2);
+ lbl(g,643,248,'حاجز تحويل');
+ emo(g,715,298,'🏠');emo(g,765,298,'🏠');lbl(g,740,255,'بيوت محمية ✅');
+ g.fillStyle='rgba(190,185,180,.8)';for(i=0;i<10;i++)g.fillRect(700+(i*37)%80,(t*50+i*43)%230+40,3,3);
+ g.strokeStyle='#ffd43b';g.setLineDash([10,8]);g.lineWidth=3;g.beginPath();g.moveTo(215,318);g.lineTo(70,318);g.stroke();g.setLineDash([]);
+ emo(g,215-((t*40)%145),312,'🚗',24);emo(g,50,312,'⛺',28);lbl(g,140,348,'مسار إخلاء آمن 🚨')}
+(function xl(){var t=Date.now()/1000;if($('stc').offsetParent)drST(t);if($('mec').offsetParent)drME(t);requestAnimationFrame(xl)})();
+function tone(f,d,v,ty){if(!AC||!VOICE)return;try{var o=AC.createOscillator(),g=AC.createGain();o.type=ty||'sine';o.frequency.value=f;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+document.addEventListener('click',function(e){if(!inApp)return;var t=e.target,q=function(x){return t.closest&&t.closest(x)};
+ if(q('.so')){var b=q('.so');if(b.style.background.indexOf('201')>=0)tone(160,.3,.25,'sawtooth');else{tone(660,.15,.25,'triangle');setTimeout(function(){tone(880,.25,.25,'triangle')},120)}}
+ else if(q('#e1,#eq,#ex,#ba,#va')){sfxN(1.4,600,.7);sfxN(.9,2500,.15)}
+ else if(q('#bb,#vb')){sfxN(.6,300,.5)}
+
+ else if(q('.flip,.part,.step,.g,.hz,#pl2,.fb,#fr,.pr')){tone(520,.12,.2,'triangle')}
+});
+var RG=[['الاهتزازات تحت البركان في ازدياد! ما أول خطوة؟',['بناء بيوت جديدة قرب الفوهة','رصد الاهتزازات وارتفاع الغازات','تجاهل الإشارات'],1,'العلوم (S)','العلماء يرصدون الاهتزازات والغازات أولاً.'],
+['كيف تصل قياسات الرصد إلى مركز القرار؟',['أقمار صناعية وأجهزة قياس ترسل البيانات','ننتظر حتى نرى الدخان','نسأل الجيران'],0,'التكنولوجيا (T)','التكنولوجيا تنقل البيانات إلى مراكز الرصد.'],
+['ماذا نحسب الآن؟',['عدد النجوم','احتمال الثوران وسرعة الحمم ووصولها','لون الرماد'],1,'الرياضيات (M)','الرياضيات تقدّر احتمال الثوران وسرعة الحمم.'],
+['كيف نحمي أهل القرية؟',['خطة إخلاء وحاجز لتحويل الحمم','ننتظر حتى الصباح','نعود إلى البيوت'],0,'الهندسة (E)','الهندسة تضع خطط الإخلاء وتبني الحواجز.']];
+var RS={i:0,w:0,lx:330,tg:340,end:0,bar:0},rgx=$('rgc').getContext('2d');
+function rdraw(t){var g=rgx,i;if(!$('rgc').offsetParent)return;scene(g,t);
+ g.fillStyle='#1c120e';g.fillRect(0,300,800,60);
+ g.clearRect(230,0,340,0);RS.lx+=(RS.tg-RS.lx)*.03;
+ g.strokeStyle='rgba(255,'+Math.round(110+40*Math.sin(t*4))+',40,.95)';g.lineWidth=10;g.lineCap='round';g.beginPath();g.moveTo(400,132);g.lineTo(560,296);g.lineTo(Math.max(570,RS.lx+150),296);g.stroke();
+ var amp=6+RS.i*12+RS.w*8;g.strokeStyle=amp>40?'#ff4d4d':'#ffb347';g.lineWidth=2;g.beginPath();for(i=0;i<=60;i++){var y=45+(Math.sin(i*1.3+t*9)*.6+(Math.random()-.5)*.8)*amp;i?g.lineTo(560+i*3.6,y):g.moveTo(560,y)}g.stroke();lbl(g,660,20,'جهاز الزلازل 〰️');
+ for(i=0;i<5;i++){var hx=610+i*38,hit=RS.lx+150>hx-12;emo(g,hx,298,hit?'🔥':'🏠',28)}
+ if(RS.bar){g.fillStyle='#9aa0a6';g.fillRect(RS.lx+158,262,12,38)}}
+(function rl(){rdraw(Date.now()/1000);requestAnimationFrame(rl)})();
+function rr(){var el=$('rg'),q=RG[RS.i];
+ if(RS.end){var L=0;for(var h=0;h<5;h++)if(RS.tg+150>610+h*38-12)L++;
+  el.innerHTML='<b>'+(L==0?'🎉 أنقذتِ القرية كلها! بفضل العلوم والتكنولوجيا والرياضيات والهندسة معاً.':L<5?'🏘️ أنقذتِ '+(5-L)+' من 5 بيوت. حاولي مرة أخرى لإنقاذ الجميع.':'🔥 وصلت الحمم إلى كل البيوت. حاولي مرة أخرى!')+'</b><div class="row"><button class="btn" id="rst">العبي مرة أخرى</button></div>';
+  if(L==0){tone(660,.15,.25,'triangle');setTimeout(function(){tone(880,.3,.25,'triangle')},150)}
+  $('rst').onclick=function(){RS.i=0;RS.w=0;RS.tg=340;RS.end=0;RS.bar=0;rr()};return}
+ el.innerHTML='<b>المرحلة '+(RS.i+1)+'/4 — '+q[3]+'</b><div style="margin:8px 0">'+q[0]+'</div><div class="row">'+q[1].map(function(o,i){return '<button class="btn ghost ro" data-i="'+i+'">'+o+'</button>'}).join('')+'</div><div id="rf" style="min-height:3em;margin-top:8px"></div>';
+ [].forEach.call(el.querySelectorAll('.ro'),function(b){b.onclick=function(){var ok=+b.getAttribute('data-i')==q[2];
+  [].forEach.call(el.querySelectorAll('.ro'),function(x){x.disabled=true;if(+x.getAttribute('data-i')==q[2]){x.style.background='#2f9e44';x.style.color='#fff'}});
+  RS.tg+=ok?25:100;RS.bar=ok&&RS.i==3;if(!ok){RS.w++;b.style.background='#c92a2a';b.style.color='#fff';tone(160,.3,.25,'sawtooth');sfxN(.7,300,.5)}else{tone(660,.15,.25,'triangle');setTimeout(function(){tone(880,.2,.25,'triangle')},120)}
+  $('rf').innerHTML=(ok?'✅ '+q[4]:'❌ الصحيح: '+q[1][q[2]]+'. الحمم اقتربت!')+' <button class="btn" id="rn" style="padding:4px 18px">'+(RS.i==3?'النتيجة':'التالي')+'</button>';
+  $('rn').onclick=function(){RS.i++;if(RS.i>3){RS.i=3;RS.end=1}rr()}}})}
+rr();
+var AP={sel:null,done:0},PF={cone:'url(#rock)',chamber:'url(#mag)',conduit:'url(#mag)',crater:'url(#mag)'};
+[].forEach.call(document.querySelectorAll('.pc'),function(b){b.onclick=function(){if(b.disabled)return;[].forEach.call(document.querySelectorAll('.pc'),function(x){x.classList.remove('on')});AP.sel=b;b.classList.add('on');$('at').innerText='اختاري الآن مكان «'+b.innerText+'» على الرسم.'}});
+[].forEach.call(document.querySelectorAll('.slot'),function(sl){sl.onclick=function(){if(sl.classList.contains('ok'))return;if(!AP.sel){$('at').innerText='اختاري قطعة أولاً.';return}
+ var k=sl.getAttribute('data-k');
+ if(AP.sel.getAttribute('data-k')==k){sl.classList.add('ok');sl.style.fill=PF[k];if(k!='cone')sl.classList.add('mg');AP.sel.disabled=true;AP.sel.classList.remove('on');AP.sel=null;AP.done++;$('at').innerText='✅ '+info[k];tone(660,.15,.25,'triangle');
+  if(AP.done==4){$('at').innerText='🌋 اكتمل البركان! ركّبتِ المخروط والفوهة والقناة وغرفة الماغما.';sfxN(1.6,600,.8)}}
+ else{sl.style.stroke='#ff4d4d';setTimeout(function(){sl.style.stroke=''},400);tone(160,.3,.25,'sawtooth');$('at').innerText='❌ ليست هنا، جرّبي مكاناً آخر.'}}});
+$('ar').onclick=function(){AP={sel:null,done:0};[].forEach.call(document.querySelectorAll('.pc'),function(b){b.disabled=false;b.classList.remove('on')});[].forEach.call(document.querySelectorAll('.slot'),function(x){x.classList.remove('ok','mg');x.style.fill=''});$('at').innerText='اختاري قطعة لتبدئي.'};
+var SGT=[['〰️','اهتزاز','#ffd43b'],['💨','غاز','#9ad0ff'],['🌡️','حرارة','#ff6a2b']],sgc=$('sgc'),sgx=sgc.getContext('2d'),G={on:0,t:30,s:0,m:0,a:[],nx:0,st:0};
+function gstart(){G={on:1,t:30,s:0,m:0,a:[],nx:0,st:Date.now()/1000};$('sgb').style.display='none';$('sgt').innerText='اضغطي على الإشارات قبل أن تختفي!'}
+function gend(){G.on=0;G.a=[];$('sgb').style.display='';$('sgb').innerText='🔄 العبي مرة أخرى';
+ $('sgt').innerText='انتهى الوقت! النقاط: '+G.s+' (التقطتِ '+G.s/10+' إشارة وفاتتك '+G.m+'). '+(G.s>=200?'🏆 رصد ممتاز، مركز الرصد في أيدٍ أمينة!':G.s>=100?'👏 جيد جداً، ركّزي أكثر لتلتقطي كل الإشارات.':'حاولي مرة أخرى، الإشارات سريعة!');
+ tone(660,.15,.25,'triangle');setTimeout(function(){tone(880,.3,.25,'triangle')},150)}
+$('sgb').onclick=gstart;
+sgc.addEventListener('pointerdown',function(e){if(!G.on)return;e.preventDefault();var r=sgc.getBoundingClientRect(),x=(e.clientX-r.left)*800/r.width,y=(e.clientY-r.top)*360/r.height,best=null,bd=46,now=Date.now()/1000;
+ G.a.forEach(function(o){var d=Math.hypot(o.x-x,o.y-y);if(!o.h&&d<bd){bd=d;best=o}});
+ if(best){best.h=now;G.s+=10;tone(700+best.ty*120,.12,.25,'triangle')}});
+function gdraw(){var g=sgx,now=Date.now()/1000;
+ if(!sgc.offsetParent){if(G.on){G.on=0;G.a=[];$('sgb').style.display='';$('sgb').innerText='ابدئي اللعبة';$('sgt').innerText=''}return}
+ scene(g,now);
+ if(G.on){var el=now-G.st;G.t=Math.max(0,30-el);
+  if(now>G.nx){G.a.push({x:60+Math.random()*680,y:70+Math.random()*220,t0:now,l:Math.max(.9,1.9-el*.03),ty:Math.floor(Math.random()*3),h:0});G.nx=now+Math.max(.45,.9-el*.015)}
+  G.a=G.a.filter(function(o){if(!o.h&&now-o.t0>o.l){G.m++;return false}return !o.h||now-o.h<.4});
+  if(G.t<=0)gend()}
+ G.a.forEach(function(o){var T=SGT[o.ty];
+  if(o.h){g.globalAlpha=Math.max(0,1-(now-o.h)/.4);lbl(g,o.x,o.y-(now-o.h)*60,'+10 ✨');g.globalAlpha=1;return}
+  var k=(now-o.t0)/o.l;g.fillStyle='rgba(255,80,40,.22)';g.beginPath();g.arc(o.x,o.y,34,0,7);g.fill();
+  g.strokeStyle=T[2];g.lineWidth=4;g.beginPath();g.arc(o.x,o.y,34,-Math.PI/2,-Math.PI/2+(1-k)*Math.PI*2);g.stroke();
+  emo(g,o.x,o.y+10,T[0],30);lbl(g,o.x,o.y+56,T[1])});
+ lbl(g,110,28,'النقاط: '+G.s);lbl(g,400,28,'فاتتك: '+G.m);lbl(g,690,28,'الوقت: '+Math.ceil(G.t))}
+(function gl(){gdraw();requestAnimationFrame(gl)})();
+[].forEach.call(document.querySelectorAll('.pr'),function(b){b.onclick=function(){var t='فكرة جميلة! بفضل STEM يقترب العلماء من التنبؤ بالثوران، لكن التنبؤ الدقيق بكل ثوران ما زال تحدياً مفتوحاً.';$('prt').innerText=t;say(t)}});
+(function(){var cvs=$('m3'),g=cvs.getContext('2d'),W=800,H=520,D=6,F=520,yaw=-1.3,pit=.4,cut=false,er=false,auto=true,sel='',parts=[],pc=[],drag=null,tm=0,A2=.9,N=40,R2=2.2,GD=-1.4,CH=1.7,TP=6.2832;
+var NM={cone:'المخروط البركاني',crater:'الفوهة',conduit:'القناة البركانية',chamber:'غرفة الماغما'};
+function rn(n){var x=Math.sin(n*91.7)*4375.5;return x-Math.floor(x)}
+function rot(v){var c=Math.cos(yaw),s=Math.sin(yaw),x=v[0]*c+v[2]*s,z=-v[0]*s+v[2]*c,cp=Math.cos(pit),sp=Math.sin(pit);return[x,v[1]*cp-z*sp,v[1]*sp+z*cp]}
+function pr(r){var k=F/(D-r[2]);return[W/2+r[0]*k,H*.57-r[1]*k,k]}
+function rgb(c,s){return'rgb('+c.map(function(v){return Math.min(255,Math.round(v*s))}).join(',')+')'}
+function face(p,n,col,tag,cull,em){var r=p.map(rot),cx=0,cy=0,cz=0,L=r.length,sh=.85;r.forEach(function(q){cx+=q[0];cy+=q[1];cz+=q[2]});cx/=L;cy/=L;cz/=L;
+ if(n){var a=rot(n);if(cull&&a[0]*-cx+a[1]*-cy+a[2]*(D-cz)<=0)return;sh=.45+.55*Math.max(0,a[0]*-.4+a[1]*.7+a[2]*.6)}
+ if(em)sh=1;if(tag===sel)sh*=1.45;parts.push({p:r.map(pr),z:cz,col:rgb(col,sh),tag:tag})}
+function rr(t){return .28+1.22*Math.pow(1-t,1.2)}
+function pt(r,y,a){return[r*Math.cos(a),y,r*Math.sin(a)]}
+var BD=[[92,64,48],[120,88,62],[78,52,40]];
+function build(){parts=[];var pu=.5+.5*Math.sin(tm*4);
+ for(var i=0;i<N;i++){var a=i/N*TP,b=(i+1)/N*TP,m=(a+b)/2;if(cut&&(m<A2||m>TP-A2))continue;var cm=Math.cos(m),sm=Math.sin(m);
+  for(var k=0;k<6;k++){var t0=k/6,t1=(k+1)/6,hot=er&&k>=2&&(i*7+k*3)%5<2;
+   face([pt(rr(t0),CH*t0,a),pt(rr(t0),CH*t0,b),pt(rr(t1),CH*t1,b),pt(rr(t1),CH*t1,a)],[cm*.8,.6,sm*.8],hot?[255,100+pu*40,43]:[107,85,72],'cone',1,hot)}
+  face([pt(.28,CH,a),pt(.28,CH,b),[0,CH-.15,0]],0,er?[255,150+pu*60,50]:[200,90,40],'crater',0,1);
+  face([pt(1.5,0,a),pt(1.5,0,b),pt(R2,0,b),pt(R2,0,a)],[0,1,0],[74,90,58],'ground',1);
+  for(var j=0;j<3;j++){var y0=GD+j*-GD/3,y1=y0-GD/3;face([pt(R2,y0,a),pt(R2,y0,b),pt(R2,y1,b),pt(R2,y1,a)],[cm,0,sm],BD[j],'ground',1)}}
+ if(cut){[A2,TP-A2].forEach(function(w){
+  face([pt(0,CH-.15,w),pt(.28,CH,w),pt(1.5,0,w),pt(0,0,w)],0,[130,104,88],'cone',0);
+  for(var j=0;j<3;j++){var y0=j*GD/3,y1=(j+1)*GD/3;face([pt(0,y0,w),pt(R2,y0,w),pt(R2,y1,w),pt(0,y1,w)],0,BD[j].map(function(c){return c*1.25}),'ground',0)}});
+  for(var i=0;i<8;i++){var a=i/8*TP,b=(i+1)/8*TP,m=(a+b)/2;face([pt(.12,-.9,a),pt(.12,-.9,b),pt(.12,CH-.15,b),pt(.12,CH-.15,a)],[Math.cos(m),0,Math.sin(m)],[255,122+pu*50,61],'conduit',1,1)}
+  for(var i=0;i<14;i++)for(var k=0;k<6;k++){var a=i/14*TP,b=(i+1)/14*TP,t0=k/6*Math.PI,t1=(k+1)/6*Math.PI;
+   function ep(t,x){return[.85*Math.sin(t)*Math.cos(x),-.95+.32*Math.cos(t),.85*Math.sin(t)*Math.sin(x)]}
+   face([ep(t0,a),ep(t0,b),ep(t1,b),ep(t1,a)],0,[255,70+pu*50+(er?40:0),25],'chamber',0,1)}}
+ parts.sort(function(a,b){return a.z-b.z})}
+function lab(s,v){var q=pr(rot(v));g.font='bold 22px Tajawal,Tahoma,Arial';g.textAlign='center';g.direction='rtl';g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.7)';g.fillStyle='#fff';g.strokeText(s,q[0],q[1]);g.fillText(s,q[0],q[1])}
+function draw(){g.clearRect(0,0,W,H);var q=pr(rot([0,0,0])),gr=g.createRadialGradient(q[0],q[1],20,q[0],q[1],340);gr.addColorStop(0,er?'rgba(255,100,30,.35)':'rgba(255,120,50,.12)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);
+ build();parts.forEach(function(f){g.fillStyle=f.col;g.strokeStyle='rgba(0,0,0,.2)';g.lineWidth=1;g.beginPath();f.p.forEach(function(p,i){i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])});g.closePath();g.fill();g.stroke()});
+ if(er){for(var s=0;s<3;s++)pc.push({x:0,y:CH-.1,z:0,vx:(Math.random()-.5)*.03,vy:.03+Math.random()*.04,vz:(Math.random()-.5)*.03,l:1,h:Math.random()<.4})}
+ pc.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.z+=p.vz;p.vy-=.0008;p.l-=.007;var a=pr(rot([p.x,p.y,p.z]));g.globalAlpha=Math.max(0,p.l)*.85;g.fillStyle=p.h?'#ff9a3d':'#7a716d';g.beginPath();g.arc(a[0],a[1],a[2]*(p.h?.035:.05+(1-p.l)*.05),0,7);g.fill()});g.globalAlpha=1;pc=pc.filter(function(p){return p.l>0});
+ lab(NM.crater,[0,CH+.25,0]);lab('المخروط',[-1.15,.55,0]);if(cut){lab('القناة',[.5,.7,0]);lab(NM.chamber,[1.4,-.95,0])}}
+function pick(x,y){for(var i=parts.length-1;i>=0;i--){var p=parts[i].p,ins=false;for(var a=0,b=p.length-1;a<p.length;b=a++){if((p[a][1]>y)!=(p[b][1]>y)&&x<(p[b][0]-p[a][0])*(y-p[a][1])/(p[b][1]-p[a][1])+p[a][0])ins=!ins}if(ins)return parts[i].tag}return''}
+function select(k){if(!NM[k])return;sel=k;if((k=='conduit'||k=='chamber')&&!cut)setCut(true);$('partInfo').innerText=info[k];[].forEach.call($('mTags').children,function(b){b.className='btn'+(b.getAttribute('data-k')==k?'':' ghost')})}
+function setCut(v){cut=v;$('mCut').innerText=v?'🧊 إغلاق المقطع':'✂️ مقطع'}
+for(var k in NM){var b=document.createElement('button');b.className='btn ghost';b.innerText=NM[k];b.setAttribute('data-k',k);b.onclick=(function(k){return function(){select(k)}})(k);$('mTags').appendChild(b)}
+$('mCut').onclick=function(){setCut(!cut)};
+$('mEr').onclick=function(){er=!er;this.className='btn'+(er?'':' ghost');if(er&&typeof sfxN=='function')sfxN(1.8,600,.9)};
+$('mRot').onclick=function(){auto=!auto;this.className='btn'+(auto?'':' ghost')};
+function xy(e){var r=cvs.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+cvs.onpointerdown=function(e){drag={x:e.clientX,y:e.clientY,mv:0};try{cvs.setPointerCapture(e.pointerId)}catch(x){}};
+cvs.onpointermove=function(e){if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.mv=1;if(drag.mv){yaw+=dx*.008;pit=Math.max(.1,Math.min(1.2,pit+dy*.006));auto=false;$('mRot').className='btn ghost'}drag.x=e.clientX;drag.y=e.clientY};
+cvs.onpointerup=function(e){if(drag&&!drag.mv){var c=xy(e);select(pick(c[0],c[1]))}drag=null};
+function fr(){if(cvs.offsetParent){tm+=.03;if(auto)yaw+=.006;draw()}requestAnimationFrame(fr)}
+$('mRot').className='btn';fr()})();
+
+</script>
+</body>
+</html>
